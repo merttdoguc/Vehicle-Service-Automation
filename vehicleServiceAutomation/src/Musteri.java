@@ -23,7 +23,7 @@ public class Musteri implements Serializable {
         this.sahipOlunanAraclar = new LinkedList<>();
     }
 
-    // --- .TXT İŞLEMLERİ İÇİN YARDIMCI METOTLAR (YENİ) ---
+    // Dosya İşlemleri İçin Yardımcı Metotlar
 
     /**
      * Müşteri bilgilerini .txt dosyasına yazılacak formata (CSV) dönüştürür.
