@@ -25,7 +25,7 @@ public class Arac implements Serializable {
         this.yakitTipi = yakitTipi;
     }
 
-    // --- .TXT İŞLEMLERİ İÇİN YARDIMCI METOTLAR (YENİ) ---
+    // Dosya İşlemleri İçin Yardımcı Metotlar
 
     /**
      * Araç bilgilerini .txt dosyasına yazılacak CSV formatına dönüştürür.
