@@ -1,4 +1,4 @@
-Araç Servis Randevu Otomasyon Sistemi
+**Araç Servis Randevu Otomasyon Sistemi**
 
 Bu proje, bir araç servisinin randevu, müşteri ve araç yönetimini gerçekleştirmek amacıyla **Veri Yapıları** dersi kapsamında geliştirilmiştir. Kullanıcı dostu bir arayüz (JavaFX) ve performanslı veri saklama yöntemleri kullanılmıştır.
 
