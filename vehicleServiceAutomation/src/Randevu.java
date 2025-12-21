@@ -21,7 +21,7 @@ public class Randevu implements  Serializable {
         this.durum = durum;
     }
 
-    // --- .TXT İŞLEMLERİ İÇİN YARDIMCI METOT (YENİ) ---
+    // Dosya İşlemleri İçin Yardımcı Metotlar
 
     /**
      * Randevu bilgilerini .txt dosyasına yazar.
