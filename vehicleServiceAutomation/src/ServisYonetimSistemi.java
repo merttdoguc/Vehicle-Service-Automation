@@ -9,7 +9,9 @@ public class ServisYonetimSistemi {
     private LinkedList<Arac> aracListesi;
     private LinkedList<Randevu> randevuListesi;
 
-    // Dosya isimleri (.txt formatında)
+    // AVL index: Plakadan Aracı aramak (hızlı arama için)
+    private AVLAracAgaci aracIndex;
+
     private static final String MUSTERI_DOSYA = "musteriler.txt";
     private static final String ARAC_DOSYA = "araclar.txt";
     private static final String RANDEVU_DOSYA = "randevular.txt";
@@ -18,23 +20,41 @@ public class ServisYonetimSistemi {
         musteriListesi = new LinkedList<>();
         aracListesi = new LinkedList<>();
         randevuListesi = new LinkedList<>();
+        aracIndex = new AVLAracAgaci();
+
         verileriYukle();
+        rebuildAracIndex(); // yüklemeden sonra index’i olusturur
     }
 
-    // Getter Metotlar
-    public LinkedList<Musteri> getMusteriListesi() {
-        return musteriListesi;
+    // getter
+    public LinkedList<Musteri> getMusteriListesi() { return musteriListesi; }
+    public LinkedList<Arac> getAracListesi() { return aracListesi; }
+    public LinkedList<Randevu> getRandevuListesi() { return randevuListesi; }
+
+
+
+    private void rebuildAracIndex() {
+        aracIndex.clear();
+        for (Arac a : aracListesi) {
+            if (a != null && a.getPlaka() != null && !a.getPlaka().trim().isEmpty()) {
+                aracIndex.insert(a);
+            }
+        }
     }
 
-    public LinkedList<Arac> getAracListesi() {
-        return aracListesi;
+    private void indexAracEkle(Arac a) {
+        if (a == null || a.getPlaka() == null) return;
+        // aynı plaka zaten varsa insert zaten eklemez
+        aracIndex.insert(a);
     }
 
-    public LinkedList<Randevu> getRandevuListesi() {
-        return randevuListesi;
+    private void indexAracSil(String plaka) {
+        if (plaka == null) return;
+        aracIndex.delete(plaka.trim());
     }
 
-    // Müşteri İşlemleri
+    // Müşteri işlemleri
+
     public void musteriEkle(Musteri m) {
         if (m == null) return;
         musteriListesi.add(m);
@@ -68,33 +88,82 @@ public class ServisYonetimSistemi {
         }
     }
 
-    // Araç İşlemleri
+    // araç işlemleri
 
-    // Aracı Müşteriye Bağlayan Metot
+    // aracı müşteriye bağlamak
     public void musteriyeAracEkle(Musteri m, Arac a) {
         if (m == null || a == null) return;
-        m.aracEkle(a); // Müşterinin listesine ekle
-        if (!aracListesi.contains(a)) aracListesi.add(a); // Genel listeye ekle
-        verileriKaydet(); // Dosyaya (müşterinin yanına) yaz
+
+        m.aracEkle(a);
+
+        if (!aracListesi.contains(a)) aracListesi.add(a);
+
+        // AVL index’e ekle
+        indexAracEkle(a);
+
+        verileriKaydet();
     }
 
     public void aracEkle(Arac a) {
         if (a == null) return;
         if (!aracListesi.contains(a)) aracListesi.add(a);
+
+        // AVL index’e ekle
+        indexAracEkle(a);
+
         verileriKaydet();
     }
 
-    public void aracListesiniGuncelle() { araclariKaydet(); }
+    public void aracListesiniGuncelle() {
+        araclariKaydet();
+        // güvenlik: plaka değiştiyse bile index bozulmasın
+        rebuildAracIndex();
+    }
 
     public Arac aracAra(String plaka) {
         if (plaka == null) return null;
+        String p = plaka.trim();
+        if (p.isEmpty()) return null;
+
+        //Önce AVL’den ara
+        Arac found = aracIndex.search(p);
+        if (found != null) return found;
+
+        // Bulamazsa listeden ara
         for (Arac a : aracListesi) {
-            if (a.getPlaka() != null && a.getPlaka().equalsIgnoreCase(plaka)) return a;
+            if (a != null && a.getPlaka() != null && a.getPlaka().equalsIgnoreCase(p)) return a;
         }
         return null;
     }
 
-    // Randevu İşlemleri
+    // araç silme
+    public boolean aracSil(String plaka) {
+        if (plaka == null) return false;
+        String p = plaka.trim();
+        if (p.isEmpty()) return false;
+
+        Arac hedef = aracAra(p);
+        if (hedef == null) return false;
+
+        // genel listeden sil
+        boolean silindi = aracListesi.removeIf(a -> a != null && a.getPlaka() != null && a.getPlaka().equalsIgnoreCase(p));
+
+        // müşterilerin araç listelerinden de sil
+        for (Musteri m : musteriListesi) {
+            if (m.getSahipOlunanAraclar() != null) {
+                m.getSahipOlunanAraclar().removeIf(a -> a != null && a.getPlaka() != null && a.getPlaka().equalsIgnoreCase(p));
+            }
+        }
+
+        if (silindi) {
+            indexAracSil(p);
+            verileriKaydet();
+        }
+        return silindi;
+    }
+
+    // ===================== RANDEVU =========================
+
     public boolean randevuEkle(Randevu r) {
         if (r == null) return false;
         for (Randevu mevcut : randevuListesi) {
@@ -114,7 +183,8 @@ public class ServisYonetimSistemi {
 
     public void randevuListesiniGuncelle() { randevulariKaydet(); }
 
-    // Kaydetme ve Yükleme İşlemleri
+    // ===================== KAYDET / YÜKLE =========================
+
     public void verileriKaydet() {
         musterileriKaydet();
         araclariKaydet();
@@ -125,6 +195,7 @@ public class ServisYonetimSistemi {
         musterileriYukle();
         araclariYukle();
         randevulariYukle();
+        // index'i constructor'da rebuild ediyoruz, burada şart değil ama sorun da olmaz
     }
 
     private void musterileriKaydet() {
@@ -139,7 +210,6 @@ public class ServisYonetimSistemi {
                         .append(escapeNull(m.getEmail())).append(";")
                         .append(escapeNull(m.getMusteriKodu())).append(";");
 
-                // Müşterinin araçlarını satırın sonuna ekliyoruz
                 if (m.getSahipOlunanAraclar() != null && !m.getSahipOlunanAraclar().isEmpty()) {
                     for (int i = 0; i < m.getSahipOlunanAraclar().size(); i++) {
                         Arac a = m.getSahipOlunanAraclar().get(i);
@@ -153,7 +223,9 @@ public class ServisYonetimSistemi {
                 bw.write(sb.toString());
                 bw.newLine();
             }
-        } catch (IOException e) { System.err.println("Kayıt hatası!"); }
+        } catch (IOException e) {
+            System.err.println("Kayıt hatası!");
+        }
     }
 
     private void araclariKaydet() {
@@ -180,24 +252,33 @@ public class ServisYonetimSistemi {
         if (!f.exists()) return;
         musteriListesi.clear();
         aracListesi.clear();
+
         try (BufferedReader br = new BufferedReader(new InputStreamReader(
                 new FileInputStream(f), java.nio.charset.StandardCharsets.UTF_8))) {
+
             String satir;
             while ((satir = br.readLine()) != null) {
                 if (satir.trim().isEmpty()) continue;
+
                 String[] v = satir.split(";", -1);
                 if (v.length >= 6) {
                     Musteri m = new Musteri(Integer.parseInt(v[0].trim()), unescapeNull(v[1]),
                             unescapeNull(v[2]), unescapeNull(v[3]),
                             unescapeNull(v[4]), unescapeNull(v[5]));
+
                     if (v.length >= 7 && !v[6].trim().isEmpty()) {
                         String[] araclar = v[6].split("#");
                         for (String as : araclar) {
                             String[] aP = as.split(",");
                             if (aP.length >= 8) {
-                                Arac ar = new Arac(aP[0], aP[1], aP[2], Integer.parseInt(aP[3]),
-                                        Integer.parseInt(aP[4]), aP[5], aP[6], aP[7]);
+                                Arac ar = new Arac(aP[0], aP[1], aP[2],
+                                        Integer.parseInt(aP[3]),
+                                        Integer.parseInt(aP[4]),
+                                        aP[5], aP[6], aP[7]);
+
                                 m.aracEkle(ar);
+
+                                // listeye ekle (index daha rebuild edilmedi, fallback list kontrolü çalışır)
                                 if (aracAra(ar.getPlaka()) == null) aracListesi.add(ar);
                             }
                         }
@@ -211,13 +292,16 @@ public class ServisYonetimSistemi {
     private void araclariYukle() {
         File f = new File(ARAC_DOSYA);
         if (!f.exists()) return;
+
         try (BufferedReader br = new BufferedReader(new FileReader(f))) {
             String satir;
             while ((satir = br.readLine()) != null) {
                 String[] v = satir.split(";");
                 if (v.length >= 8 && aracAra(v[0]) == null) {
-                    aracListesi.add(new Arac(v[0], v[1], v[2], Integer.parseInt(v[3].trim()),
-                            Integer.parseInt(v[4].trim()), v[5], v[6], v[7]));
+                    aracListesi.add(new Arac(v[0], v[1], v[2],
+                            Integer.parseInt(v[3].trim()),
+                            Integer.parseInt(v[4].trim()),
+                            v[5], v[6], v[7]));
                 }
             }
         } catch (Exception e) { }
@@ -226,20 +310,29 @@ public class ServisYonetimSistemi {
     private void randevulariYukle() {
         File f = new File(RANDEVU_DOSYA);
         if (!f.exists()) return;
+
         try (BufferedReader br = new BufferedReader(new FileReader(f))) {
             String satir;
             while ((satir = br.readLine()) != null) {
                 String[] v = satir.split(";");
                 Musteri m = null;
-                for (Musteri mus : musteriListesi) if (mus.getMusteriID() == Integer.parseInt(v[1])) m = mus;
+                for (Musteri mus : musteriListesi) {
+                    if (mus.getMusteriID() == Integer.parseInt(v[1])) m = mus;
+                }
                 Arac a = aracAra(v[2]);
                 if (m != null && a != null) {
-                    randevuListesi.add(new Randevu(Integer.parseInt(v[0]), m, a, LocalDateTime.parse(v[3]), v[4], v[5]));
+                    randevuListesi.add(new Randevu(Integer.parseInt(v[0]), m, a,
+                            LocalDateTime.parse(v[3]), v[4], v[5]));
                 }
             }
         } catch (Exception e) { }
     }
 
-    private String escapeNull(String s) { return (s == null) ? "" : s.replace(";", " ").replace("|", " ").replace("#", " ").replace(",", " "); }
-    private String unescapeNull(String s) { return (s == null || s.trim().isEmpty()) ? null : s.trim(); }
+    private String escapeNull(String s) {
+        return (s == null) ? "" : s.replace(";", " ").replace("|", " ").replace("#", " ").replace(",", " ");
+    }
+
+    private String unescapeNull(String s) {
+        return (s == null || s.trim().isEmpty()) ? null : s.trim();
+    }
 }
