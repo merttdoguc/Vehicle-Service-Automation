@@ -21,20 +21,22 @@ import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.time.LocalDateTime;
+import java.time.Year;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
+import java.util.Locale;
 
 public class Main extends Application {
 
     private ServisYonetimSistemi servis = new ServisYonetimSistemi();
 
-    // Personel ekranı: Müşteri alanları (ID otomatik)
+    // Personel ekranı: müşteri alanları
     private TextField txtAd;
     private TextField txtSoyad;
     private TextField txtTelefon;
     private TextField txtEmail;
 
-    // Personel ekranı: Araç alanları
+    // Personel ekranı: araç alanları
     private TextField txtPlaka;
     private TextField txtMarka;
     private TextField txtModel;
@@ -44,7 +46,7 @@ public class Main extends Application {
     private TextField txtSasiNo;
     private TextField txtYakitTipi;
 
-    // Personel ekranı: Randevu alanları
+    // Personel ekranı: randevu alanları
     private TextField txtTarih;   // gg.MM.yyyy
     private TextField txtSaat;    // HH:mm
     private ComboBox<String> cmbServisTuru;
@@ -53,12 +55,9 @@ public class Main extends Application {
     private TableView<Randevu> table;
     private ObservableList<Randevu> randevuData;
 
-    private final DateTimeFormatter TARIH_SAAT_FORMAT =
-            DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm");
-    private final DateTimeFormatter TARIH_FORMAT =
-            DateTimeFormatter.ofPattern("dd.MM.yyyy");
-    private final DateTimeFormatter SAAT_FORMAT =
-            DateTimeFormatter.ofPattern("HH:mm");
+    private final DateTimeFormatter TARIH_SAAT_FORMAT = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm");
+    private final DateTimeFormatter TARIH_FORMAT = DateTimeFormatter.ofPattern("dd.MM.yyyy");
+    private final DateTimeFormatter SAAT_FORMAT = DateTimeFormatter.ofPattern("HH:mm");
 
     // Otomatik ID sayaçları
     private int nextMusteriID = 1;
@@ -69,30 +68,21 @@ public class Main extends Application {
 
     @Override
     public void start(Stage primaryStage) {
-        // SİSTEMİ BAŞLATIRKEN ID'LERİ DE GÜNCELLE
         idSayaclariniGuncelle();
         primaryStage.initStyle(StageStyle.UNDECORATED);
         showLoginScreen(primaryStage);
     }
 
-    // BU YENİ METODU DA Main.java İÇİNDE UYGUN BİR YERE EKLE
     private void idSayaclariniGuncelle() {
-        // Müşteri ID'lerini tara
         for (Musteri m : servis.getMusteriListesi()) {
-            if (m.getMusteriID() >= nextMusteriID) {
-                nextMusteriID = m.getMusteriID() + 1;
-            }
+            if (m.getMusteriID() >= nextMusteriID) nextMusteriID = m.getMusteriID() + 1;
         }
-        // Randevu ID'lerini tara
         for (Randevu r : servis.getRandevuListesi()) {
-            if (r.getRandevuID() >= nextRandevuID) {
-                nextRandevuID = r.getRandevuID() + 1;
-            }
+            if (r.getRandevuID() >= nextRandevuID) nextRandevuID = r.getRandevuID() + 1;
         }
     }
 
-    // ===================== LOGIN EKRANI =========================
-
+    // giriş ekranı
     private void showLoginScreen(Stage stage) {
         Label lblTitle = new Label("VivaCar Oto Servis");
         lblTitle.setStyle(
@@ -109,8 +99,7 @@ public class Main extends Application {
                         "-fx-font-size: 14;"
         );
 
-        // =========== PERSONEL GİRİŞİ ===========
-
+        // Personel
         Label lblUser = createLabel("Kullanıcı Adı");
         Label lblPass = createLabel("Parola");
 
@@ -131,11 +120,7 @@ public class Main extends Application {
 
         Button btnLoginStaff = createColoredButton("Personel Girişi", "#2563eb");
 
-        VBox personelForm = new VBox(10,
-                lblUser, txtUser,
-                lblPass, txtPass,
-                btnLoginStaff
-        );
+        VBox personelForm = new VBox(10, lblUser, txtUser, lblPass, txtPass, btnLoginStaff);
         personelForm.setPadding(new Insets(20));
         personelForm.setAlignment(Pos.CENTER);
         personelForm.setMaxWidth(260);
@@ -157,8 +142,7 @@ public class Main extends Application {
         VBox personelCard = new VBox(8, lblPersonelTitle, personelForm);
         personelCard.setAlignment(Pos.TOP_CENTER);
 
-        // =========== MÜŞTERİ GİRİŞİ (MÜŞTERİ KODU) ===========
-
+        // Müşteri (Kod)
         Label lblCodeTitle = new Label("Müşteri Girişi");
         lblCodeTitle.setStyle(
                 "-fx-font-family: 'Montserrat Medium';" +
@@ -187,12 +171,7 @@ public class Main extends Application {
                         "-fx-font-size: 12;"
         );
 
-        VBox musteriForm = new VBox(10,
-                lblCode, txtCode,
-                btnLoginCustomer,
-                lblNot,
-                linkRegister
-        );
+        VBox musteriForm = new VBox(10, lblCode, txtCode, btnLoginCustomer, lblNot, linkRegister);
         musteriForm.setPadding(new Insets(20));
         musteriForm.setAlignment(Pos.CENTER);
         musteriForm.setMaxWidth(260);
@@ -206,7 +185,6 @@ public class Main extends Application {
         VBox musteriCard = new VBox(8, lblCodeTitle, musteriForm);
         musteriCard.setAlignment(Pos.TOP_CENTER);
 
-        // İki kart yan yana
         HBox forms = new HBox(30, personelCard, musteriCard);
         forms.setAlignment(Pos.CENTER);
 
@@ -224,9 +202,6 @@ public class Main extends Application {
         stage.centerOnScreen();
         stage.show();
 
-        // =========== EVENTLER ===========
-
-        // Personel girişi
         btnLoginStaff.setOnAction(e -> {
             String u = txtUser.getText().trim();
             String p = txtPass.getText().trim();
@@ -235,14 +210,10 @@ public class Main extends Application {
                     (u.equals("emre") && p.equals("4435")) ||
                             (u.equals("mert") && p.equals("4646"));
 
-            if (dogru) {
-                showMainScreen(stage);
-            } else {
-                showAlert("Giriş Hatası", "Kullanıcı adı veya parola hatalı.");
-            }
+            if (dogru) showMainScreen(stage);
+            else showAlert("Giriş Hatası", "Kullanıcı adı veya parola hatalı.");
         });
 
-        // Müşteri girişi (müşteri kodu)
         btnLoginCustomer.setOnAction(e -> {
             String kod = txtCode.getText().trim();
             if (kod.isEmpty()) {
@@ -260,12 +231,10 @@ public class Main extends Application {
             }
         });
 
-        // Kayıt ekranına geçiş
         linkRegister.setOnAction(e -> showCustomerRegisterScreen(stage));
     }
 
-    // ===================== YENİ MÜŞTERİ KAYIT EKRANI =========================
-
+    // müşteri kayıt
     private void showCustomerRegisterScreen(Stage stage) {
         Label lblHeader = new Label("Yeni Müşteri Kaydı");
         lblHeader.setStyle(
@@ -275,7 +244,7 @@ public class Main extends Application {
                         "-fx-font-weight: bold;"
         );
 
-        // ---- MÜŞTERİ FORMU ----
+        // Müşteri Formu
         TextField cAd = createTextField();
         TextField cSoyad = createTextField();
         TextField cTel = createTextField();
@@ -302,7 +271,7 @@ public class Main extends Application {
 
         VBox musteriCard = createCard("Müşteri Bilgileri", musteriGrid);
 
-        // ---- ARAÇ FORMU ----
+        // Araç Formu
         TextField cPlaka = createTextField();
         TextField cMarka = createTextField();
         TextField cModel = createTextField();
@@ -367,12 +336,10 @@ public class Main extends Application {
 
         BorderPane root = createWindowChrome(stage, content, "VivaCar Oto Servis - Yeni Kayıt");
 
-        Scene scene = new Scene(root, 950, 600);
+        Scene scene = new Scene(root, 980, 620);
         stage.setScene(scene);
         stage.centerOnScreen();
         stage.show();
-
-        // EVENTLER
 
         btnGeri.setOnAction(e -> showLoginScreen(stage));
 
@@ -383,86 +350,84 @@ public class Main extends Application {
                 String tel = cTel.getText().trim();
                 String email = cEmail.getText().trim();
 
-                String plaka = cPlaka.getText().trim();
+                String plakaRaw = cPlaka.getText().trim();
                 String marka = cMarka.getText().trim();
                 String model = cModel.getText().trim();
                 String uretimYiliS = cUretimYili.getText().trim();
                 String kmS = cKilometre.getText().trim();
                 String sonServis = cSonServis.getText().trim();
                 String sasiNo = cSasiNo.getText().trim();
-                String yakitTipi = cYakitTipi.getText().trim();
+                String yakitTipiRaw = cYakitTipi.getText().trim();
 
-                if (ad.isEmpty() || soyad.isEmpty() || tel.isEmpty() || plaka.isEmpty()) {
+                if (ad.isEmpty() || soyad.isEmpty() || tel.isEmpty() || plakaRaw.isEmpty()) {
                     showAlert("Eksik Bilgi", "Ad, Soyad, Telefon ve Plaka boş olamaz.");
                     return;
                 }
 
-                // Telefon 11 hane kontrolü
                 if (!tel.matches("\\d{11}")) {
-                    showAlert("Telefon Hatası",
-                            "Telefon numarası 11 haneli olmalıdır.\n" +
-                                    "Örnek: 05523713980");
+                    showAlert("Telefon Hatası", "Telefon numarası 11 haneli olmalıdır.\nÖrnek: 05523713980");
                     return;
                 }
 
-                // Aynı telefonla ikinci kayıt yasak
                 Musteri mevcut = servis.musteriTelefonlaBul(tel);
                 if (mevcut != null) {
-                    showAlert(
-                            "Telefon Zaten Kayıtlı",
+                    showAlert("Telefon Zaten Kayıtlı",
                             "Bu telefon numarası ile zaten bir müşteri kaydı var.\n" +
-                                    "Lütfen müşteri kodu ile giriş yapın."
-                    );
+                                    "Lütfen müşteri kodu ile giriş yapın.");
                     return;
                 }
 
-                // --- E-POSTA KONTROLÜ (BURAYI EKLE) ---
-                // Regex ile @ işareti ve mail formatını kontrol ediyoruz
                 if (!email.isEmpty() && !email.matches("^[A-Za-z0-9+_.-]+@(.+)$")) {
-                    showAlert("E-posta Hatası",
-                            "Lütfen geçerli bir e-posta adresi giriniz.\n" +
-                                    "Örnek: mertdoguc@hotmail.com");
-                    return; // Hata varsa kaydı durdurur, aşağıya geçmez
+                    showAlert("E-posta Hatası", "Lütfen geçerli bir e-posta adresi giriniz.\nÖrnek: mertdoguc@hotmail.com");
+                    return;
                 }
 
-                // Son servis tarihi kontrolü (isteğe bağlı, boş olabilir)
                 if (!sonServis.isEmpty() && !isGecerliServisTarihi(sonServis)) {
-                    showAlert("Tarih Hatası",
-                            "Son servis tarihi gg.MM.yyyy formatında olmalı.\n" +
-                                    "Ay 1–12 arasında, Şubat en fazla 28 gün,\n" +
-                                    "diğer aylar en fazla 31 gün olabilir.");
+                    showAlert("Tarih Hatası", "Son servis tarihi gg.MM.yyyy formatında olmalı.");
                     return;
                 }
 
-                int uretimYili = 0;
-                int km = 0;
-                try {
-                    if (!uretimYiliS.isEmpty()) uretimYili = Integer.parseInt(uretimYiliS);
-                    if (!kmS.isEmpty()) km = Integer.parseInt(kmS);
-                } catch (NumberFormatException ex) {
-                    showAlert("Sayı Hatası", "Üretim yılı ve kilometre sayı olmalıdır.");
+                String plaka = normalizePlaka(plakaRaw);
+                if (!isPlakaGecerli(plaka)) {
+                    showAlert("Plaka Hatası", "Plaka formatı hatalı.\nÖrn: 35 CJG 255 veya 35 KM 2453");
                     return;
                 }
 
-                // --- ŞİMDİ MANTIK KONTROLLERİNİ BURAYA YAPIŞTIR ---
-
-                // 1. Plaka Tekrar Kontrolü (Aynı araçtan iki tane olmasın)
                 if (servis.aracAra(plaka) != null) {
                     showAlert("Plaka Zaten Kayıtlı", "Bu plaka ile sisteme kayıtlı bir araç zaten var.");
                     return;
                 }
 
-                // 2. Kilometre Mantık Kontrolü (Sadece negatif girişi engelliyoruz)
-                if (km < 0) {
-                    showAlert("Kilometre Hatası", "Kilometre negatif bir değer olamaz!");
+                if (!sasiNo.isEmpty() && isSasiNoVar(sasiNo, null)) {
+                    showAlert("Şasi No Hatası", "Bu şasi numarası sistemde zaten kayıtlı.");
                     return;
                 }
 
-                // 3. Üretim Yılı Mantık Kontrolü
-                int mevcutYil = java.time.Year.now().getValue();
+                // ✅ YAKIT TİPİ DOĞRULAMA (EKLENEN KISIM)
+                if (yakitTipiRaw.isEmpty()) {
+                    showAlert("Yakıt Tipi Hatası", "Yakıt tipi boş olamaz.\nKabul edilenler: Benzin, Dizel, Elektrik, Benzin/LPG");
+                    return;
+                }
+                if (!isYakitTipiGecerli(yakitTipiRaw)) {
+                    showAlert("Yakıt Tipi Hatası", "Yakıt tipi sadece şu değerlerden biri olabilir:\nBenzin, Dizel, Elektrik, Benzin/LPG");
+                    return;
+                }
+                String yakitTipi = canonicalYakitTipi(yakitTipiRaw);
+
+                int uretimYili = 0;
+                int km = 0;
+
+                if (!uretimYiliS.isEmpty()) uretimYili = Integer.parseInt(uretimYiliS);
+                if (!kmS.isEmpty()) km = Integer.parseInt(kmS);
+
+                int mevcutYil = Year.now().getValue();
                 if (uretimYili != 0 && (uretimYili < 1900 || uretimYili > mevcutYil + 1)) {
-                    showAlert("Üretim Yılı Hatası",
-                            "Lütfen geçerli bir üretim yılı giriniz (1900 - " + (mevcutYil + 1) + ").");
+                    showAlert("Üretim Yılı Hatası", "Geçerli bir üretim yılı giriniz (1900 - " + (mevcutYil + 1) + ").");
+                    return;
+                }
+
+                if (km < 0 || km > 9_999_999) {
+                    showAlert("Kilometre Hatası", "Kilometre 0 ile 9.999.999 arasında olmalıdır.");
                     return;
                 }
 
@@ -486,13 +451,12 @@ public class Main extends Application {
                 showAlert("Sayı Hatası", "Üretim yılı ve kilometre alanları sayısal olmalıdır.");
             } catch (Exception ex) {
                 ex.printStackTrace();
-                showAlert("Hata", "Kayıt oluşturulurken hata oluştu: " + ex.getMessage());
+                showAlert("Hata", "Kayıt oluşturulurken hata: " + ex.getMessage());
             }
         });
     }
 
-    // ===================== MÜŞTERİ PORTAL EKRANI =========================
-
+    // müşteri portalı
     private void showCustomerPortalScreen(Stage stage, Musteri musteri) {
         Label lblHeader = new Label("Müşteri Paneli");
         lblHeader.setStyle(
@@ -513,9 +477,11 @@ public class Main extends Application {
         headerBox.setAlignment(Pos.CENTER_LEFT);
         headerBox.setPadding(new Insets(8, 0, 12, 0));
 
-        // Sol: Araç listesi
+        // SOL: Araç listesi
+        ObservableList<Arac> aracObs = FXCollections.observableArrayList(musteri.getSahipOlunanAraclar());
+
         ListView<Arac> lstAraclar = new ListView<>();
-        lstAraclar.setItems(FXCollections.observableArrayList(musteri.getSahipOlunanAraclar()));
+        lstAraclar.setItems(aracObs);
         lstAraclar.setCellFactory(lv -> new ListCell<>() {
             @Override
             protected void updateItem(Arac item, boolean empty) {
@@ -524,12 +490,8 @@ public class Main extends Application {
                     setText(null);
                 } else {
                     String text = item.getPlaka();
-                    if (item.getMarka() != null && !item.getMarka().isEmpty()) {
-                        text += " - " + item.getMarka();
-                    }
-                    if (item.getModel() != null && !item.getModel().isEmpty()) {
-                        text += " " + item.getModel();
-                    }
+                    if (item.getMarka() != null && !item.getMarka().isEmpty()) text += " - " + item.getMarka();
+                    if (item.getModel() != null && !item.getModel().isEmpty()) text += " " + item.getModel();
                     setText(text);
                 }
             }
@@ -543,9 +505,316 @@ public class Main extends Application {
         );
 
         VBox aracCard = createCard("Kayıtlı Araçlarınız", lstAraclar);
-        aracCard.setPrefWidth(320);
+        aracCard.setPrefWidth(340);
+        aracCard.setMinWidth(300);
+        aracCard.setMaxWidth(420);
 
-        // Sağ: Randevu oluşturma paneli
+        // SAĞ: Araç yönetimi formu
+        TextField vPlaka = createTextField();
+        TextField vMarka = createTextField();
+        TextField vModel = createTextField();
+        TextField vUretimYili = createTextField();
+        TextField vKilometre = createTextField();
+        TextField vSonServis = createTextField();
+        TextField vSasiNo = createTextField();
+        TextField vYakitTipi = createTextField();
+
+        GridPane aracYonetimGrid = new GridPane();
+        aracYonetimGrid.setHgap(8);
+        aracYonetimGrid.setVgap(6);
+        aracYonetimGrid.setPadding(new Insets(8));
+        aracYonetimGrid.setStyle("-fx-background-color: #020617;");
+
+        int row = 0;
+        aracYonetimGrid.add(createLabel("Plaka"), 0, row);
+        aracYonetimGrid.add(vPlaka, 1, row++);
+
+        aracYonetimGrid.add(createLabel("Marka"), 0, row);
+        aracYonetimGrid.add(vMarka, 1, row++);
+
+        aracYonetimGrid.add(createLabel("Model"), 0, row);
+        aracYonetimGrid.add(vModel, 1, row++);
+
+        aracYonetimGrid.add(createLabel("Üretim Yılı"), 0, row);
+        aracYonetimGrid.add(vUretimYili, 1, row++);
+
+        aracYonetimGrid.add(createLabel("Kilometre"), 0, row);
+        aracYonetimGrid.add(vKilometre, 1, row++);
+
+        aracYonetimGrid.add(createLabel("Son Servis Tarihi (gg.MM.yyyy)"), 0, row);
+        aracYonetimGrid.add(vSonServis, 1, row++);
+
+        aracYonetimGrid.add(createLabel("Şasi No"), 0, row);
+        aracYonetimGrid.add(vSasiNo, 1, row++);
+
+        aracYonetimGrid.add(createLabel("Yakıt Tipi (Benzin/Dizel/Elektrik/Benzin/LPG)"), 0, row);
+        aracYonetimGrid.add(vYakitTipi, 1, row++);
+
+        Button btnYeniAracEkle = createColoredButton("Yeni Araç Ekle", "#22c55e");
+        Button btnSeciliGuncelle = createColoredButton("Seçili Aracı Güncelle", "#f97316");
+        Button btnSeciliSil = createColoredButton("Seçili Aracı Sil", "#ef4444");
+
+        HBox aracBtnBar = new HBox(10, btnYeniAracEkle, btnSeciliGuncelle, btnSeciliSil);
+        aracBtnBar.setAlignment(Pos.CENTER);
+
+        VBox aracYonetimContent = new VBox(10, aracYonetimGrid, aracBtnBar);
+        VBox aracYonetimCard = createCard("Araç Yönetimi", aracYonetimContent);
+        aracYonetimCard.setMaxWidth(Double.MAX_VALUE);
+
+        Runnable aracFormTemizle = () -> {
+            vPlaka.clear();
+            vMarka.clear();
+            vModel.clear();
+            vUretimYili.clear();
+            vKilometre.clear();
+            vSonServis.clear();
+            vSasiNo.clear();
+            vYakitTipi.clear();
+        };
+
+        lstAraclar.getSelectionModel().selectedItemProperty().addListener((obs, oldV, secili) -> {
+            if (secili == null) return;
+            vPlaka.setText(secili.getPlaka());
+            vMarka.setText(secili.getMarka());
+            vModel.setText(secili.getModel());
+            vUretimYili.setText(secili.getUretimYili() == 0 ? "" : String.valueOf(secili.getUretimYili()));
+            vKilometre.setText(String.valueOf(secili.getKilometre()));
+            vSonServis.setText(secili.getSonServisTarihi());
+            vSasiNo.setText(secili.getSasiNo());
+            vYakitTipi.setText(secili.getYakitTipi());
+        });
+
+        btnYeniAracEkle.setOnAction(e -> {
+            try {
+                String plaka = normalizePlaka(vPlaka.getText().trim());
+                String marka = vMarka.getText().trim();
+                String model = vModel.getText().trim();
+                String uretimYiliS = vUretimYili.getText().trim();
+                String kmS = vKilometre.getText().trim();
+                String sonServis = vSonServis.getText().trim();
+                String sasiNo = vSasiNo.getText().trim();
+                String yakitTipiRaw = vYakitTipi.getText().trim();
+
+                if (plaka.isEmpty()) {
+                    showAlert("Eksik Bilgi", "Plaka boş olamaz.");
+                    return;
+                }
+
+                if (!isPlakaGecerli(plaka)) {
+                    showAlert("Plaka Hatası", "Plaka formatı hatalı.\nÖrn: 35 CJG 255 veya 35 KM 2453");
+                    return;
+                }
+
+                if (servis.aracAra(plaka) != null) {
+                    showAlert("Plaka Hatası", "Bu plaka sistemde zaten kayıtlı.");
+                    return;
+                }
+
+                if (!sonServis.isEmpty() && !isGecerliServisTarihi(sonServis)) {
+                    showAlert("Tarih Hatası", "Son servis tarihi gg.MM.yyyy formatında olmalı.");
+                    return;
+                }
+
+                if (!sasiNo.isEmpty() && isSasiNoVar(sasiNo, null)) {
+                    showAlert("Şasi No Hatası", "Bu şasi numarası sistemde zaten kayıtlı.");
+                    return;
+                }
+
+
+                if (yakitTipiRaw.isEmpty()) {
+                    showAlert("Yakıt Tipi Hatası", "Yakıt tipi boş olamaz.\nKabul edilenler: Benzin, Dizel, Elektrik, Benzin/LPG");
+                    return;
+                }
+                if (!isYakitTipiGecerli(yakitTipiRaw)) {
+                    showAlert("Yakıt Tipi Hatası", "Yakıt tipi sadece şu değerlerden biri olabilir:\nBenzin, Dizel, Elektrik, Benzin/LPG");
+                    return;
+                }
+                String yakitTipi = canonicalYakitTipi(yakitTipiRaw);
+
+                int uretimYili = 0;
+                int km = 0;
+
+                if (!uretimYiliS.isEmpty()) uretimYili = Integer.parseInt(uretimYiliS);
+                if (!kmS.isEmpty()) km = Integer.parseInt(kmS);
+
+                int mevcutYil = Year.now().getValue();
+                if (uretimYili != 0 && (uretimYili < 1900 || uretimYili > mevcutYil + 1)) {
+                    showAlert("Üretim Yılı Hatası", "Geçerli bir üretim yılı giriniz (1900 - " + (mevcutYil + 1) + ").");
+                    return;
+                }
+
+                if (km < 0 || km > 9_999_999) {
+                    showAlert("Kilometre Hatası", "Kilometre 0 ile 9.999.999 arasında olmalıdır.");
+                    return;
+                }
+
+                Arac yeni = new Arac(plaka, marka, model, uretimYili, km, sonServis, sasiNo, yakitTipi);
+
+                // Müşteriye + sisteme ekle
+                musteri.aracEkle(yeni);
+                if (servis.aracAra(plaka) == null) servis.getAracListesi().add(yeni);
+                servis.verileriKaydet();
+
+                aracObs.setAll(musteri.getSahipOlunanAraclar());
+                lstAraclar.getSelectionModel().select(yeni);
+                showAlert("Başarılı", "Araç eklendi.");
+
+            } catch (NumberFormatException ex) {
+                showAlert("Sayı Hatası", "Üretim yılı ve kilometre sadece sayı olmalı.");
+            } catch (Exception ex) {
+                ex.printStackTrace();
+                showAlert("Hata", "Araç eklenirken hata: " + ex.getMessage());
+            }
+        });
+
+        btnSeciliGuncelle.setOnAction(e -> {
+            Arac secili = lstAraclar.getSelectionModel().getSelectedItem();
+            if (secili == null) {
+                showAlert("Seçim Yok", "Güncellemek için listeden araç seç.");
+                return;
+            }
+
+            try {
+                String yeniPlaka = normalizePlaka(vPlaka.getText().trim());
+                String marka = vMarka.getText().trim();
+                String model = vModel.getText().trim();
+                String uretimYiliS = vUretimYili.getText().trim();
+                String kmS = vKilometre.getText().trim();
+                String sonServis = vSonServis.getText().trim();
+                String sasiNo = vSasiNo.getText().trim();
+                String yakitTipiRaw = vYakitTipi.getText().trim();
+
+                if (yeniPlaka.isEmpty()) {
+                    showAlert("Eksik Bilgi", "Plaka boş olamaz.");
+                    return;
+                }
+
+                if (!isPlakaGecerli(yeniPlaka)) {
+                    showAlert("Plaka Hatası", "Plaka formatı hatalı.\nÖrn: 35 CJG 255 veya 35 KM 2453");
+                    return;
+                }
+
+                // Plaka değişiyorsa
+                if (!yeniPlaka.equalsIgnoreCase(secili.getPlaka()) && servis.aracAra(yeniPlaka) != null) {
+                    showAlert("Plaka Hatası", "Bu plaka sistemde zaten kayıtlı.");
+                    return;
+                }
+
+                if (!sonServis.isEmpty() && !isGecerliServisTarihi(sonServis)) {
+                    showAlert("Tarih Hatası", "Son servis tarihi gg.MM.yyyy formatında olmalı.");
+                    return;
+                }
+
+                // Şasi no değişiyorsa
+                if (!sasiNo.isEmpty() && isSasiNoVar(sasiNo, secili)) {
+                    showAlert("Şasi No Hatası", "Bu şasi numarası sistemde zaten kayıtlı.");
+                    return;
+                }
+
+
+                if (yakitTipiRaw.isEmpty()) {
+                    showAlert("Yakıt Tipi Hatası", "Yakıt tipi boş olamaz.\nKabul edilenler: Benzin, Dizel, Elektrik, Benzin/LPG");
+                    return;
+                }
+                if (!isYakitTipiGecerli(yakitTipiRaw)) {
+                    showAlert("Yakıt Tipi Hatası", "Yakıt tipi sadece şu değerlerden biri olabilir:\nBenzin, Dizel, Elektrik, Benzin/LPG");
+                    return;
+                }
+                String yakitTipi = canonicalYakitTipi(yakitTipiRaw);
+
+                int uretimYili = 0;
+                int km = 0;
+
+                if (!uretimYiliS.isEmpty()) uretimYili = Integer.parseInt(uretimYiliS);
+                if (!kmS.isEmpty()) km = Integer.parseInt(kmS);
+
+                int mevcutYil = Year.now().getValue();
+                if (uretimYili != 0 && (uretimYili < 1900 || uretimYili > mevcutYil + 1)) {
+                    showAlert("Üretim Yılı Hatası", "Geçerli bir üretim yılı giriniz (1900 - " + (mevcutYil + 1) + ").");
+                    return;
+                }
+
+                if (km < 0 || km > 9_999_999) {
+                    showAlert("Kilometre Hatası", "Kilometre 0 ile 9.999.999 arasında olmalıdır.");
+                    return;
+                }
+
+                // Aynı objeyi güncelle (randevular referans kaybetmesin)
+                secili.setPlaka(yeniPlaka);
+                secili.setMarka(marka);
+                secili.setModel(model);
+                secili.setUretimYili(uretimYili);
+                secili.setKilometre(km);
+                secili.setSonServisTarihi(sonServis);
+                secili.setSasiNo(sasiNo);
+                secili.setYakitTipi(yakitTipi);
+
+                servis.verileriKaydet();
+
+                aracObs.setAll(musteri.getSahipOlunanAraclar());
+                // listede tekrar seç
+                for (Arac a : aracObs) {
+                    if (a.getPlaka() != null && a.getPlaka().equalsIgnoreCase(yeniPlaka)) {
+                        lstAraclar.getSelectionModel().select(a);
+                        break;
+                    }
+                }
+
+                showAlert("Başarılı", "Araç güncellendi.");
+
+            } catch (NumberFormatException ex) {
+                showAlert("Sayı Hatası", "Üretim yılı ve kilometre sadece sayı olmalı.");
+            } catch (Exception ex) {
+                ex.printStackTrace();
+                showAlert("Hata", "Araç güncellenirken hata: " + ex.getMessage());
+            }
+        });
+
+        btnSeciliSil.setOnAction(e -> {
+            Arac secili = lstAraclar.getSelectionModel().getSelectedItem();
+            if (secili == null) {
+                showAlert("Seçim Yok", "Silmek için listeden araç seç.");
+                return;
+            }
+
+            // Randevusu varsa sildirme
+            for (Randevu r : servis.getRandevuListesi()) {
+                if (r.getArac() != null && r.getArac().getPlaka() != null &&
+                        r.getArac().getPlaka().equalsIgnoreCase(secili.getPlaka())) {
+                    showAlert("Silinemedi", "Bu araca ait randevu bulunduğu için silinemez.");
+                    return;
+                }
+            }
+
+            musteri.getSahipOlunanAraclar().remove(secili);
+
+            // Sistem listesinden de kaldır (başka müşteride aynı plaka var mı kontrol)
+            boolean baskaKullaniyorMu = false;
+            for (Musteri m : servis.getMusteriListesi()) {
+                if (m == musteri) continue;
+                for (Arac a : m.getSahipOlunanAraclar()) {
+                    if (a.getPlaka() != null && a.getPlaka().equalsIgnoreCase(secili.getPlaka())) {
+                        baskaKullaniyorMu = true;
+                        break;
+                    }
+                }
+                if (baskaKullaniyorMu) break;
+            }
+            if (!baskaKullaniyorMu) {
+                servis.getAracListesi().removeIf(a ->
+                        a.getPlaka() != null && a.getPlaka().equalsIgnoreCase(secili.getPlaka()));
+            }
+
+            servis.verileriKaydet();
+
+            aracObs.setAll(musteri.getSahipOlunanAraclar());
+            lstAraclar.getSelectionModel().clearSelection();
+            aracFormTemizle.run();
+
+            showAlert("Başarılı", "Araç silindi.");
+        });
+
+        // SAĞ ALT: Randevu oluştur
         TextField cTarih = createTextField();
         TextField cSaat = createTextField();
         ComboBox<String> cServisTuru = new ComboBox<>();
@@ -572,7 +841,7 @@ public class Main extends Application {
         randevuGrid.setPadding(new Insets(8));
         randevuGrid.setStyle("-fx-background-color: #020617;");
 
-        int row = 0;
+        row = 0;
         randevuGrid.add(createLabel("Tarih (gg.MM.yyyy)"), 0, row);
         randevuGrid.add(cTarih, 1, row++);
 
@@ -583,23 +852,33 @@ public class Main extends Application {
         randevuGrid.add(cServisTuru, 1, row++);
 
         VBox randevuCard = createCard("Randevu Oluştur", randevuGrid);
+        randevuCard.setMaxWidth(Double.MAX_VALUE);
 
         Button btnRandevuOlustur = createColoredButton("Randevu Oluştur", "#2563eb");
         Button btnGeri = createColoredButton("Oturumu Kapat", "#ef4444");
 
         HBox buttonBar = new HBox(10, btnRandevuOlustur, btnGeri);
-        buttonBar.setAlignment(Pos.CENTER_RIGHT);
-        buttonBar.setPadding(new Insets(12, 0, 0, 0));
+        buttonBar.setAlignment(Pos.CENTER);
+        buttonBar.setPadding(new Insets(10, 0, 0, 0));
 
-        VBox sagPanel = new VBox(10, randevuCard, buttonBar);
-        sagPanel.setPadding(new Insets(0, 0, 0, 0));
+        VBox sagPanel = new VBox(12, aracYonetimCard, randevuCard, buttonBar);
+        sagPanel.setMaxWidth(Double.MAX_VALUE);
 
+        // ORTALAMA FIX: Tam ekranda küçük kalmasın
         HBox center = new HBox(20, aracCard, sagPanel);
         center.setPadding(new Insets(8, 0, 0, 0));
+        HBox.setHgrow(sagPanel, Priority.ALWAYS);
 
-        VBox mainBox = new VBox(8, headerBox, center);
+        StackPane centerWrap = new StackPane(center);
+        centerWrap.setAlignment(Pos.TOP_CENTER);
+        centerWrap.setPadding(new Insets(8, 0, 0, 0));
+
+        VBox mainBox = new VBox(8, headerBox, centerWrap);
+        mainBox.setAlignment(Pos.TOP_CENTER);
         mainBox.setPadding(new Insets(16));
         mainBox.setStyle("-fx-background-color: #020617;");
+        mainBox.setFillWidth(true);
+        mainBox.setMaxWidth(Double.MAX_VALUE);
 
         BorderPane content = new BorderPane();
         content.setCenter(mainBox);
@@ -607,44 +886,35 @@ public class Main extends Application {
 
         BorderPane root = createWindowChrome(stage, content, "VivaCar Oto Servis - Müşteri Paneli");
 
-        Scene scene = new Scene(root, 900, 550);
+        Scene scene = new Scene(root, 1100, 650);
         stage.setScene(scene);
         stage.centerOnScreen();
         stage.show();
 
-        // EVENTLER
-
-        // Oturumu Kapat butonu için onay kutulu yeni mantık
         btnGeri.setOnAction(e -> {
             Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
             alert.setTitle("Oturumu Kapat");
             alert.setHeaderText("Güvenli Çıkış");
             alert.setContentText("Hesabınızdan çıkış yapmak istediğinize emin misiniz?");
 
-            // Alert kutusunu VivaCar'ın karanlık temasına uyduruyoruz
             DialogPane dp = alert.getDialogPane();
             dp.setStyle("-fx-background-color: #020617; -fx-font-family: 'Montserrat Medium';");
-
-            // Yazıları senin kullandığın beyaz tona (#f9fafb) çeviriyoruz
             dp.lookupAll(".label").forEach(node -> {
                 if (node instanceof Label) ((Label) node).setTextFill(Color.web("#f9fafb"));
             });
 
-            // Kullanıcı "Tamam" derse giriş ekranına geri gönder
-            if (alert.showAndWait().get() == ButtonType.OK) {
+            if (alert.showAndWait().orElse(ButtonType.CANCEL) == ButtonType.OK) {
                 showLoginScreen(stage);
             }
         });
 
-        // Randevu oluşturma butonu (Burası aynı kalıyor)
         btnRandevuOlustur.setOnAction(e -> {
             try {
                 Arac seciliArac = lstAraclar.getSelectionModel().getSelectedItem();
                 if (seciliArac == null) {
-                    showAlert("Seçim Yok", "Lütfen randevu oluşturmak için listeden bir araç seçin.");
+                    showAlert("Seçim Yok", "Lütfen randevu için listeden bir araç seçin.");
                     return;
                 }
-                // ... (Kodun geri kalanı sende olduğu gibi devam ediyor)
 
                 String tarihStr = cTarih.getText().trim();
                 String saatStr = cSaat.getText().trim();
@@ -664,8 +934,7 @@ public class Main extends Application {
                 }
 
                 if (tarihSaat.isBefore(LocalDateTime.now())) {
-                    showAlert("Geçersiz Tarih",
-                            "Geçmiş bir tarihe randevu oluşturulamaz.");
+                    showAlert("Geçersiz Tarih", "Geçmiş bir tarihe randevu alınamaz.");
                     return;
                 }
 
@@ -679,37 +948,24 @@ public class Main extends Application {
                     return;
                 }
 
-                showAlert("Başarılı", "Randevunuz oluşturuldu. Personel onay ekranına düşmüştür.");
-
+                showAlert("Başarılı", "Randevunuz oluşturuldu. Personel ekranına düşmüştür.");
                 cTarih.clear();
                 cSaat.clear();
                 cServisTuru.getSelectionModel().selectFirst();
 
             } catch (Exception ex) {
                 ex.printStackTrace();
-                showAlert("Hata", "Randevu oluşturulurken hata oluştu: " + ex.getMessage());
+                showAlert("Hata", "Randevu oluşturulurken hata: " + ex.getMessage());
             }
         });
     }
 
-    // ===================== PERSONEL ANA EKRAN =========================
-
+    // personel ekranı
     private void showMainScreen(Stage stage) {
         randevuData = FXCollections.observableArrayList();
+        randevuData.addAll(servis.getRandevuListesi());
 
-        // Mevcut veriden ID sayaçlarını başlat
-        for (Musteri m : servis.getMusteriListesi()) {
-            if (m.getMusteriID() >= nextMusteriID) {
-                nextMusteriID = m.getMusteriID() + 1;
-            }
-        }
-        for (Randevu r : servis.getRandevuListesi()) {
-            if (r.getRandevuID() >= nextRandevuID) {
-                nextRandevuID = r.getRandevuID() + 1;
-            }
-        }
-
-        // -------- MÜŞTERİ PANELİ (GÖRÜNTÜ / EKLEME İÇİN) --------
+        // müşteri paneli
         txtAd = createTextField();
         txtSoyad = createTextField();
         txtTelefon = createTextField();
@@ -736,7 +992,7 @@ public class Main extends Application {
 
         VBox musteriCard = createCard("Müşteri Bilgileri", musteriGrid);
 
-        // -------- ARAÇ PANELİ --------
+        // araç paneli
         txtPlaka = createTextField();
         txtMarka = createTextField();
         txtModel = createTextField();
@@ -779,7 +1035,7 @@ public class Main extends Application {
 
         VBox aracCard = createCard("Araç Bilgileri", aracGrid);
 
-        // -------- RANDEVU PANELİ --------
+        // -------- RANDEVU PANELİ (GÜNCELLEME İÇİN) --------
         txtTarih = createTextField();
         txtSaat = createTextField();
 
@@ -819,13 +1075,22 @@ public class Main extends Application {
 
         VBox randevuCard = createCard("Randevu Bilgileri", randevuGrid);
 
+        // SOL FORM
         VBox solForm = new VBox(12, musteriCard, aracCard, randevuCard);
         solForm.setPadding(new Insets(16));
         solForm.setPrefWidth(360);
 
+        // soldaki müşteri + araç alanları kilitle
+        lockAsReadOnly(txtAd, txtSoyad, txtTelefon, txtEmail,
+                txtPlaka, txtMarka, txtModel, txtUretimYili, txtKilometre, txtSonServis, txtSasiNo, txtYakitTipi);
+
         // -------- TABLO --------
         table = new TableView<>();
         table.setItems(randevuData);
+
+        Label emptyLbl = new Label("Aktif randevu bulunamadı");
+        emptyLbl.setStyle("-fx-text-fill: #9ca3af; -fx-font-family: 'Montserrat Medium'; -fx-font-size: 14;");
+        table.setPlaceholder(emptyLbl);
 
         TableColumn<Randevu, String> colMusteriAd = new TableColumn<>("Müşteri Ad Soyad");
         colMusteriAd.setCellValueFactory(
@@ -873,39 +1138,30 @@ public class Main extends Application {
                         "-fx-font-family: 'Montserrat Medium';"
         );
 
-        randevuData.addAll(servis.getRandevuListesi());
-
-        // Tablo seçildiğinde formu doldur (sadece gösterim amaçlı)
         table.getSelectionModel().selectedItemProperty().addListener((obs, eski, secili) -> {
-            if (secili != null) {
-                formuRandevudanDoldur(secili);
-            }
+            if (secili != null) formuRandevudanDoldur(secili);
         });
 
         VBox tableCard = createCard("Randevu Listesi", table);
 
-        // 1. Oturumu Kapat butonu ve Onay Mekanizması
+        // Oturumu Kapat
         Button btnLogout = createColoredButton("Oturumu Kapat", "#ef4444");
         btnLogout.setOnAction(e -> {
-            // Onay kutusu oluşturuluyor
             Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
             alert.setTitle("Oturumu Kapat");
             alert.setHeaderText("Güvenli Çıkış");
             alert.setContentText("Oturumu kapatmak istediğinize emin misiniz?");
 
-            // Karanlık tema ayarı (Alert'in bembeyaz patlamasını engeller)
             DialogPane dp = alert.getDialogPane();
             dp.setStyle("-fx-background-color: #020617; -fx-font-family: 'Montserrat Medium';");
             dp.lookupAll(".label").forEach(node -> ((Label) node).setTextFill(Color.web("#f9fafb")));
 
-            // Kullanıcı OK derse işlemleri yap ve çık
-            if (alert.showAndWait().get() == ButtonType.OK) {
-                inputTemizle(); // Önceki personelin bilgilerini temizle
-                showLoginScreen(stage); // Giriş ekranına gönder
+            if (alert.showAndWait().orElse(ButtonType.CANCEL) == ButtonType.OK) {
+                inputTemizle();
+                showLoginScreen(stage);
             }
         });
 
-        // 2. Başlık Etiketi
         Label lblHeader = new Label("Personel İşlem Ekranı");
         lblHeader.setStyle(
                 "-fx-font-family: 'Montserrat Medium';" +
@@ -914,25 +1170,21 @@ public class Main extends Application {
                         "-fx-font-weight: bold;"
         );
 
-        // 3. Başlığı solda, butonu sağda tutan boşluk
         Region headerSpacer = new Region();
         HBox.setHgrow(headerSpacer, Priority.ALWAYS);
 
-        // 4. HeaderBox Güncellemesi
         HBox headerBox = new HBox(15, lblHeader, headerSpacer, btnLogout);
         headerBox.setAlignment(Pos.CENTER_LEFT);
         headerBox.setPadding(new Insets(10, 25, 10, 25));
-        // -------- BUTONLAR --------
-        Button btnEkle = createColoredButton("Randevu Ekle", "#2563eb");
-        Button btnGuncelle = createColoredButton("Seçili Randevunun Tarihini Güncelle", "#f97316");
+
+        // Butonlar (Randevu ekle YOK)
+        Button btnGuncelle = createColoredButton("Randevuyu Güncelle", "#f97316");
         Button btnSil = createColoredButton("Seçili Randevuyu Sil", "#ef4444");
         Button btnDurumGuncelle = createColoredButton("Seçili Randevuyu Tamamlandı Yap", "#22c55e");
         Button btnIptal = createColoredButton("Seçili Randevuyu İptal Et", "#6b7280");
-        Button btnFatura = createColoredButton("Fatura Kes (Manuel)", "#a855f7");
+        Button btnFatura = createColoredButton("Fatura Kes", "#a855f7");
 
-        HBox buttonBar = new HBox(10,
-                btnEkle, btnGuncelle, btnSil, btnDurumGuncelle, btnIptal, btnFatura
-        );
+        HBox buttonBar = new HBox(10, btnGuncelle, btnSil, btnDurumGuncelle, btnIptal, btnFatura);
         buttonBar.setAlignment(Pos.CENTER);
         buttonBar.setPadding(new Insets(12));
 
@@ -947,7 +1199,7 @@ public class Main extends Application {
         middle.setPadding(new Insets(8));
         middle.setStyle("-fx-background-color: #020617;");
 
-        // -------- ALT ÇUBUK: TARİH/SAAT + FOTO --------
+        // Alt bar
         lblDateTime = new Label(LocalDateTime.now().format(TARIH_SAAT_FORMAT));
         lblDateTime.setStyle(
                 "-fx-font-family: 'Montserrat Medium';" +
@@ -960,15 +1212,13 @@ public class Main extends Application {
 
         ImageView mechanicView = null;
         try {
-            // Fotoğrafı buraya koy: src/main/resources/ui/usta.png
             Image img = new Image(getClass().getResourceAsStream("/ui/usta.png"));
             mechanicView = new ImageView(img);
             mechanicView.setFitHeight(180);
             mechanicView.setPreserveRatio(true);
             mechanicView.setSmooth(true);
             mechanicView.setEffect(new DropShadow(18, Color.web("#00000080")));
-        } catch (Exception e) {
-            // Foto bulunamazsa sessiz geç
+        } catch (Exception ignored) {
         }
 
         Label tagline = new Label("\"VivaCar Oto Servis\" olarak 45 yıldır hizmetinizdeyiz");
@@ -980,11 +1230,8 @@ public class Main extends Application {
         );
 
         VBox rightBottom = new VBox(10);
-        if (mechanicView != null) {
-            rightBottom.getChildren().addAll(mechanicView, tagline);
-        } else {
-            rightBottom.getChildren().add(tagline);
-        }
+        if (mechanicView != null) rightBottom.getChildren().addAll(mechanicView, tagline);
+        else rightBottom.getChildren().add(tagline);
         rightBottom.setAlignment(Pos.BOTTOM_RIGHT);
 
         Region spacer = new Region();
@@ -1006,11 +1253,9 @@ public class Main extends Application {
         stage.centerOnScreen();
         stage.show();
 
-        // HEADER'I SİMSİYAH YAP
         applyDarkHeader(table);
 
-        // -------- EVENTLER --------
-        btnEkle.setOnAction(e -> randevuEkle());
+        // Eventler
         btnSil.setOnAction(e -> randevuSil());
         btnDurumGuncelle.setOnAction(e -> randevuDurumTamamlandi());
         btnIptal.setOnAction(e -> randevuIptalEt());
@@ -1018,127 +1263,7 @@ public class Main extends Application {
         btnFatura.setOnAction(e -> faturaKes());
     }
 
-    // ===================== EVENT METODLARI =========================
-
-    // Personel ekranından randevu ekleme
-    private void randevuEkle() {
-        try {
-            String ad = txtAd.getText().trim();
-            String soyad = txtSoyad.getText().trim();
-            String telefon = txtTelefon.getText().trim();
-            String email = txtEmail.getText().trim();
-
-            String plaka = txtPlaka.getText().trim();
-            String marka = txtMarka.getText().trim();
-            String model = txtModel.getText().trim();
-            String uretimYiliS = txtUretimYili.getText().trim();
-            String kmS = txtKilometre.getText().trim();
-            String sonServis = txtSonServis.getText().trim();
-            String sasiNo = txtSasiNo.getText().trim();
-            String yakitTipi = txtYakitTipi.getText().trim();
-
-            String tarihStr = txtTarih.getText().trim();
-            String saatStr = txtSaat.getText().trim();
-            String servisTuru = cmbServisTuru.getValue();
-            String durum = "Onaylandı"; // Yeni randevular direkt onaylı
-
-            if (ad.isEmpty() || soyad.isEmpty()
-                    || plaka.isEmpty()
-                    || tarihStr.isEmpty() || saatStr.isEmpty()) {
-                showAlert("Eksik Bilgi",
-                        "Ad, Soyad, Plaka, Tarih ve Saat boş olamaz.");
-                return;
-            }
-
-            // Son servis tarihi kontrolü
-            if (!sonServis.isEmpty() && !isGecerliServisTarihi(sonServis)) {
-                showAlert("Tarih Hatası",
-                        "Son servis tarihi gg.MM.yyyy formatında olmalı.\n" +
-                                "Ay 1–12 arasında, Şubat en fazla 28 gün,\n" +
-                                "diğer aylar en fazla 31 gün olabilir.");
-                return;
-            }
-
-            int uretimYili = 0;
-            int km = 0;
-            if (!uretimYiliS.isEmpty()) {
-                uretimYili = Integer.parseInt(uretimYiliS);
-            }
-            if (!kmS.isEmpty()) {
-                km = Integer.parseInt(kmS);
-            }
-
-            LocalDateTime tarihSaat;
-            try {
-                tarihSaat = LocalDateTime.parse(tarihStr + " " + saatStr, TARIH_SAAT_FORMAT);
-            } catch (DateTimeParseException ex) {
-                showAlert("Tarih/Saat Hatası", "Tarih: gg.MM.yyyy, Saat: HH:mm formatında olmalı.");
-                return;
-            }
-
-            // Geçmiş tarihe izin verme
-            if (tarihSaat.isBefore(LocalDateTime.now())) {
-                showAlert("Geçersiz Tarih",
-                        "Geçmiş bir tarihe randevu oluşturulamaz.");
-                return;
-            }
-
-            // Müşteri: telefon numarasına göre bul, yoksa isim/telefonla yeni müşteri
-            Musteri musteri = null;
-            if (!telefon.isEmpty()) {
-                musteri = findMusteriByTelefon(telefon);
-            }
-            if (musteri == null) {
-                int yeniMusteriID = nextMusteriID++;
-                // Personel ekranından eklenen müşteriye müşteri kodu vermiyoruz
-                // (müşteri paneline bu kayıtlar girmeyecekse null bırakılabilir)
-                musteri = new Musteri(yeniMusteriID, ad, soyad, telefon, email, null);
-                servis.musteriEkle(musteri);
-            } else {
-                musteri.setAd(ad);
-                musteri.setSoyad(soyad);
-                musteri.setTelefon(telefon);
-                musteri.setEmail(email);
-                servis.musteriListesiniGuncelle();
-            }
-
-            // Araç
-            Arac arac = servis.aracAra(plaka);
-            if (arac == null) {
-                arac = new Arac(plaka, marka, model, uretimYili, km,
-                        sonServis, sasiNo, yakitTipi);
-                servis.musteriyeAracEkle(musteri, arac);
-            } else {
-                arac.setMarka(marka);
-                arac.setModel(model);
-                arac.setUretimYili(uretimYili);
-                arac.setKilometre(km);
-                arac.setSonServisTarihi(sonServis);
-                arac.setSasiNo(sasiNo);
-                arac.setYakitTipi(yakitTipi);
-                servis.aracListesiniGuncelle();
-            }
-
-            int yeniRandevuID = nextRandevuID++;
-
-            Randevu r = new Randevu(yeniRandevuID, musteri, arac, tarihSaat, servisTuru, durum);
-
-            if (!servis.randevuEkle(r)) {
-                showAlert("Çakışma", "Bu araç için aynı tarih & saatte başka bir randevu var.");
-                return;
-            }
-
-            randevuData.add(r);
-            inputTemizle();
-
-        } catch (NumberFormatException ex) {
-            showAlert("Sayı Hatası", "Üretim yılı ve kilometre alanları sayısal olmalıdır.");
-        } catch (Exception ex) {
-            ex.printStackTrace();
-            showAlert("Hata", "Randevu eklenirken hata oluştu: " + ex.getMessage());
-        }
-    }
-
+    // randevu işlemleri
     private void randevuSil() {
         Randevu secili = table.getSelectionModel().getSelectedItem();
         if (secili == null) {
@@ -1147,11 +1272,8 @@ public class Main extends Application {
         }
 
         boolean basarili = servis.randevuSil(secili.getRandevuID());
-        if (basarili) {
-            randevuData.remove(secili);
-        } else {
-            showAlert("Silme Hatası", "Randevu listede bulunamadı.");
-        }
+        if (basarili) randevuData.remove(secili);
+        else showAlert("Silme Hatası", "Randevu listede bulunamadı.");
     }
 
     private void randevuDurumTamamlandi() {
@@ -1161,7 +1283,6 @@ public class Main extends Application {
             return;
         }
 
-        // Durumu Tamamlandı yap
         secili.setDurum("Tamamlandı");
         servis.randevuListesiniGuncelle();
 
@@ -1169,16 +1290,12 @@ public class Main extends Application {
         String dosyaAdi = olusturFaturaDosyaAdi(secili);
 
         try {
-            // Fatura dosyası yaz
             faturaDosyasiYaz(secili, dosyaAdi, ucret);
-
-            // Randevuyu sistemden ve ekrandan sil
             servis.randevuSil(secili.getRandevuID());
             randevuData.remove(secili);
             table.refresh();
 
-            showAlert("İşlem Tamamlandı",
-                    "Randevu tamamlandı ve fatura kesildi: " + dosyaAdi);
+            showAlert("İşlem Tamamlandı", "Randevu tamamlandı ve fatura kesildi: " + dosyaAdi);
         } catch (IOException e) {
             showAlert("Fatura Hatası", "Fatura oluşturulurken hata oluştu: " + e.getMessage());
         }
@@ -1190,13 +1307,11 @@ public class Main extends Application {
             showAlert("Seçim Yok", "Lütfen iptal etmek için tablodan bir randevu seçin.");
             return;
         }
-
         secili.setDurum("İptal");
         servis.randevuListesiniGuncelle();
         table.refresh();
     }
 
-    // Sadece randevu tarih & servis türünü günceller
     private void randevuGuncelle() {
         Randevu secili = table.getSelectionModel().getSelectedItem();
         if (secili == null) {
@@ -1210,8 +1325,7 @@ public class Main extends Application {
             String servisTuru = cmbServisTuru.getValue();
 
             if (tarihStr.isEmpty() || saatStr.isEmpty()) {
-                showAlert("Eksik Bilgi",
-                        "Tarih ve Saat boş olamaz.");
+                showAlert("Eksik Bilgi", "Tarih ve Saat boş olamaz.");
                 return;
             }
 
@@ -1224,12 +1338,10 @@ public class Main extends Application {
             }
 
             if (tarihSaat.isBefore(LocalDateTime.now())) {
-                showAlert("Geçersiz Tarih",
-                        "Geçmiş bir tarihe randevu oluşturulamaz.");
+                showAlert("Geçersiz Tarih", "Geçmiş bir tarihe randevu oluşturulamaz.");
                 return;
             }
 
-            // Sadece randevunun tarih ve servis türünü güncelle
             secili.setTarihSaat(tarihSaat);
             secili.setServisTuru(servisTuru);
 
@@ -1243,7 +1355,6 @@ public class Main extends Application {
         }
     }
 
-    // Fatura oluştur (manuel buton)
     private void faturaKes() {
         Randevu secili = table.getSelectionModel().getSelectedItem();
         if (secili == null) {
@@ -1262,9 +1373,7 @@ public class Main extends Application {
         }
     }
 
-    // ===================== FATURA YARDIMCI METODLARI =========================
-
-    // Dosya adını "Ad_Soyad.txt" formatında üretir, boşsa fallback kullanır
+    // fatura
     private String olusturFaturaDosyaAdi(Randevu r) {
         Musteri m = r.getMusteri();
         String base;
@@ -1272,9 +1381,7 @@ public class Main extends Application {
             String ad = m.getAd() != null ? m.getAd().trim() : "";
             String soyad = m.getSoyad() != null ? m.getSoyad().trim() : "";
             base = (ad + "_" + soyad).trim();
-            if (base.isEmpty()) {
-                base = "Musteri_" + r.getRandevuID();
-            }
+            if (base.isEmpty()) base = "Musteri_" + r.getRandevuID();
         } else {
             base = "Musteri_" + r.getRandevuID();
         }
@@ -1282,7 +1389,6 @@ public class Main extends Application {
         return base + ".txt";
     }
 
-    // Fatura içeriğini dosyaya yazar
     private void faturaDosyasiYaz(Randevu secili, String dosyaAdi, double ucret) throws IOException {
         Musteri m = secili.getMusteri();
         Arac a = secili.getArac();
@@ -1294,6 +1400,7 @@ public class Main extends Application {
             bw.newLine();
             bw.write("--------------------------------");
             bw.newLine();
+
             bw.write("MÜŞTERİ BİLGİLERİ");
             bw.newLine();
             if (m != null) {
@@ -1307,6 +1414,7 @@ public class Main extends Application {
                 bw.write("Müşteri bilgisi bulunamadı.");
                 bw.newLine();
             }
+
             bw.write("--------------------------------");
             bw.newLine();
             bw.write("ARAÇ BİLGİLERİ");
@@ -1324,6 +1432,7 @@ public class Main extends Application {
                 bw.write("Araç bilgisi bulunamadı.");
                 bw.newLine();
             }
+
             bw.write("--------------------------------");
             bw.newLine();
             bw.write("İŞLEM BİLGİLERİ");
@@ -1334,6 +1443,7 @@ public class Main extends Application {
             bw.newLine();
             bw.write("Durum            : " + secili.getDurum());
             bw.newLine();
+
             bw.write("--------------------------------");
             bw.newLine();
             bw.write(String.format("Toplam Tutar     : %.2f TL", ucret));
@@ -1343,32 +1453,19 @@ public class Main extends Application {
         }
     }
 
-    // Servis türüne göre ücret
     private double servisUcreti(String servisTuru) {
         if (servisTuru == null) return 0;
-
-        switch (servisTuru) {
-            case "Periyodik Bakım":
-                return 3000.0;
-            case "Yağ Değişimi":
-                return 1000.0;
-            case "Fren Bakımı":
-                return 2500.0;
-            case "Lastik Değişimi":
-                return 1500.0;
-            case "Genel Kontrol":
-                return 800.0;
-            default:
-                return 0.0;
-        }
+        return switch (servisTuru) {
+            case "Periyodik Bakım" -> 3000.0;
+            case "Yağ Değişimi" -> 1000.0;
+            case "Fren Bakımı" -> 2500.0;
+            case "Lastik Değişimi" -> 1500.0;
+            case "Genel Kontrol" -> 800.0;
+            default -> 0.0;
+        };
     }
 
-    // ===================== YARDIMCI METODLAR =========================
-
-    private Musteri findMusteriByTelefon(String tel) {
-        return servis.musteriTelefonlaBul(tel);
-    }
-
+    // ===================== FORM DOLDURMA =========================
     private void formuRandevudanDoldur(Randevu r) {
         Musteri m = r.getMusteri();
         Arac a = r.getArac();
@@ -1396,6 +1493,7 @@ public class Main extends Application {
         }
     }
 
+    // ===================== UI HELPERS =========================
     private Label createLabel(String text) {
         Label l = new Label(text);
         l.setStyle(
@@ -1458,25 +1556,32 @@ public class Main extends Application {
         return box;
     }
 
+    private void lockAsReadOnly(TextField... fields) {
+        for (TextField f : fields) {
+            f.setEditable(false);
+            f.setFocusTraversable(false);
+        }
+    }
+
     private void inputTemizle() {
-        txtAd.clear();
-        txtSoyad.clear();
-        txtTelefon.clear();
-        txtEmail.clear();
+        if (txtAd != null) txtAd.clear();
+        if (txtSoyad != null) txtSoyad.clear();
+        if (txtTelefon != null) txtTelefon.clear();
+        if (txtEmail != null) txtEmail.clear();
 
-        txtPlaka.clear();
-        txtMarka.clear();
-        txtModel.clear();
-        txtUretimYili.clear();
-        txtKilometre.clear();
-        txtSonServis.clear();
-        txtSasiNo.clear();
-        txtYakitTipi.clear();
+        if (txtPlaka != null) txtPlaka.clear();
+        if (txtMarka != null) txtMarka.clear();
+        if (txtModel != null) txtModel.clear();
+        if (txtUretimYili != null) txtUretimYili.clear();
+        if (txtKilometre != null) txtKilometre.clear();
+        if (txtSonServis != null) txtSonServis.clear();
+        if (txtSasiNo != null) txtSasiNo.clear();
+        if (txtYakitTipi != null) txtYakitTipi.clear();
 
-        txtTarih.clear();
-        txtSaat.clear();
+        if (txtTarih != null) txtTarih.clear();
+        if (txtSaat != null) txtSaat.clear();
 
-        cmbServisTuru.getSelectionModel().selectFirst();
+        if (cmbServisTuru != null) cmbServisTuru.getSelectionModel().selectFirst();
     }
 
     private void showAlert(String baslik, String mesaj) {
@@ -1493,29 +1598,22 @@ public class Main extends Application {
         );
 
         Node contentLabel = dp.lookup(".content.label");
-        if (contentLabel instanceof Label) {
-            ((Label) contentLabel).setTextFill(Color.web("#f9fafb"));
-        }
+        if (contentLabel instanceof Label) ((Label) contentLabel).setTextFill(Color.web("#f9fafb"));
 
         alert.showAndWait();
     }
 
-    // TableView kolon başlıklarını (header) komple siyaha çeken kesin çözüm
     private void applyDarkHeader(TableView<?> tableView) {
         Runnable styler = () -> {
-            // 1. Background container
             for (Node n : tableView.lookupAll(".column-header-background")) {
                 n.setStyle("-fx-background-color: #020617;");
             }
-            // 2. Individual column headers
             for (Node n : tableView.lookupAll(".column-header")) {
                 n.setStyle("-fx-background-color: #020617; -fx-border-color: #1f2937; -fx-border-width: 0 1 1 0;");
             }
-            // 3. Filler area (right side)
             for (Node n : tableView.lookupAll(".filler")) {
                 n.setStyle("-fx-background-color: #020617; -fx-border-color: #1f2937; -fx-border-width: 0 0 1 0;");
             }
-            // 4. Text labels
             for (Node n : tableView.lookupAll(".column-header .label")) {
                 if (n instanceof Label lbl) {
                     lbl.setTextFill(Color.web("#e5e7eb"));
@@ -1530,7 +1628,6 @@ public class Main extends Application {
         });
     }
 
-    // Modern başlık barı
     private BorderPane createWindowChrome(Stage stage, Region content, String titleText) {
         Label icon = new Label("🛠");
         icon.setStyle(
@@ -1556,7 +1653,6 @@ public class Main extends Application {
         styleTitleBarButton(btnMin, false);
         styleTitleBarButton(btnMax, false);
         styleTitleBarButton(btnClose, true);
-
         btnMin.setOnAction(e -> stage.setIconified(true));
         btnMax.setOnAction(e -> stage.setMaximized(!stage.isMaximized()));
         btnClose.setOnAction(e -> stage.close());
@@ -1611,30 +1707,75 @@ public class Main extends Application {
         );
     }
 
-    // Son servis tarihi doğrulama (gg.MM.yyyy, Şubat 28, diğerleri 31, ay max 12)
+
+    private String normalizePlaka(String p) {
+        if (p == null) return "";
+        p = p.trim().replaceAll("\\s+", " ");
+        return p.toUpperCase(Locale.forLanguageTag("tr-TR"));
+    }
+
+    private boolean isPlakaGecerli(String plaka) {
+        if (plaka == null) return false;
+        return plaka.matches("^(0[1-9]|[1-7][0-9]|8[01])\\s[A-Z]{1,3}\\s\\d{2,4}$");
+    }
+
+    private boolean isSasiNoVar(String sasiNo, Arac ignore) {
+        if (sasiNo == null) return false;
+        String aranan = sasiNo.trim();
+        if (aranan.isEmpty()) return false;
+
+        for (Arac a : servis.getAracListesi()) {
+            if (a == null) continue;
+            if (ignore != null && a == ignore) continue;
+            if (a.getSasiNo() != null && a.getSasiNo().trim().equalsIgnoreCase(aranan)) return true;
+        }
+        return false;
+    }
+
     private boolean isGecerliServisTarihi(String tarih) {
         if (tarih == null) return false;
-        if (!tarih.matches("\\d{2}\\.\\d{2}\\.\\d{4}")) {
-            return false;
-        }
+        if (!tarih.matches("\\d{2}\\.\\d{2}\\.\\d{4}")) return false;
         try {
             int gun = Integer.parseInt(tarih.substring(0, 2));
             int ay = Integer.parseInt(tarih.substring(3, 5));
-            // int yil = Integer.parseInt(tarih.substring(6, 10)); // şu an yıl için özel kontrol yok
-
             if (ay < 1 || ay > 12) return false;
             if (gun < 1) return false;
-
-            if (ay == 2) {
-                return gun <= 28;
-            } else {
-                return gun <= 31;
-            }
+            if (ay == 2) return gun <= 28;
+            return gun <= 31;
         } catch (Exception e) {
             return false;
         }
     }
 
+
+    private String normalizeYakitTipi(String s) {
+        if (s == null) return "";
+        String t = s.trim();
+        t = t.replaceAll("\\s*/\\s*", "/"); // Benzin / LPG -> Benzin/LPG
+        t = t.replaceAll("\\s+", " ");
+        t = t.toUpperCase(Locale.forLanguageTag("tr-TR"));
+        // Türkçe İ sorununu ASCII'ye yaklaştır
+        t = t.replace('İ', 'I');
+        return t;
+    }
+
+    private boolean isYakitTipiGecerli(String s) {
+        String t = normalizeYakitTipi(s);
+        return t.equals("BENZIN") || t.equals("DIZEL") || t.equals("ELEKTRIK") || t.equals("BENZIN/LPG");
+    }
+
+    private String canonicalYakitTipi(String s) {
+        String t = normalizeYakitTipi(s);
+        return switch (t) {
+            case "BENZIN" -> "Benzin";
+            case "DIZEL" -> "Dizel";
+            case "ELEKTRIK" -> "Elektrik";
+            case "BENZIN/LPG" -> "Benzin/LPG";
+            default -> s.trim();
+        };
+    }
+
+    // ===================== MAIN =========================
     public static void main(String[] args) {
         launch(args);
     }
