@@ -1,17 +1,19 @@
-**Araç Servis Randevu Otomasyon Sistemi**
+# Vehicle Service Appointment Automation
 
-Bu proje, bir araç servisinin randevu, müşteri ve araç yönetimini gerçekleştirmek amacıyla **Veri Yapıları** dersi kapsamında geliştirilmiştir. Kullanıcı dostu bir arayüz (JavaFX) ve performanslı veri saklama yöntemleri kullanılmıştır.
+This project was developed for the **Data Structures** course to manage vehicle service appointments, customers, and vehicles. It features a user-friendly JavaFX interface and efficient data management using advanced data structures.
 
-**Özellikler**
-- **Personel Paneli:** Müşteri kaydı, araç ekleme, randevu takibi ve faturalandırma işlemleri.
-- **Müşteri Paneli:** Servis durumunu kontrol etme ve yeni randevu oluşturma.
-- **Veri Doğrulama:** E-posta, plaka, telefon ve tarih formatı kontrolleri ile hatasız veri girişi.
-- **Veri Yapıları:** Arama işlemlerini optimize etmek için **AVL Ağacı (AVL Tree)** ve bağlı listeler kullanılmıştır.
-- **Karanlık Tema:** Modern ve göz yormayan JavaFX UI tasarımı.
-- **Veri Güvenliği:** ID çakışmalarını önleyen senkronize sayaç sistemi ve UTF-8 karakter desteği.
+## Features
 
-**Teknolojiler**
-- **Dil:** Java
-- **Arayüz:** JavaFX
-- **Veri Yönetimi:** File I/O (Dosya tabanlı kalıcı veri saklama)
-- **Algoritmalar:** AVL Tree, Linked List, Searching & Sorting
+- **Staff Panel:** Customer registration, vehicle management, appointment tracking, and invoice management.
+- **Customer Panel:** Create new service appointments and track service status.
+- **Input Validation:** Validation for email addresses, license plates, phone numbers, and date formats to ensure accurate data entry.
+- **Data Structures:** Implemented **AVL Trees** for efficient searching and **Linked Lists** for data management.
+- **Dark Theme:** Modern and user-friendly JavaFX interface.
+- **Data Integrity:** Synchronized ID generation system to prevent duplicate IDs and full UTF-8 character support.
+
+## Tech Stack
+
+- **Language:** Java
+- **UI Framework:** JavaFX
+- **Data Storage:** File I/O (file-based persistent storage)
+- **Data Structures & Algorithms:** AVL Tree, Linked List, Searching, Sorting
