@@ -1,0 +1,21 @@
+=========== FATURA ===========
+Fatura Tarihi : 01.11.2026 23:22
+--------------------------------
+MÜŞTERİ BİLGİLERİ
+Ad Soyad  : mert doguc
+Telefon   : 05444468699
+E-posta   : mertdoguc@hotmail.com
+--------------------------------
+ARAÇ BİLGİLERİ
+Plaka     : 26 VE 508
+Marka     : Opel
+Model     : Corsa
+Yakıt Tipi: Dizel
+--------------------------------
+İŞLEM BİLGİLERİ
+Servis Türü      : Fren Bakımı
+Randevu Tarihi   : 03.11.2026 15:00
+Durum            : Tamamlandı
+--------------------------------
+Toplam Tutar     : 2500.00 TL
+=========== TEŞEKKÜR EDERİZ ===========
