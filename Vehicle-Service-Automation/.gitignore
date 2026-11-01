@@ -28,7 +28,4 @@ replay_pid*
 *.iml
 out/
 
-out/
-target/
-build/
 
